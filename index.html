@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#1a1410" />
+<title>פאב-לו חוקוק</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --amber: #BA7517; --amber-mid: #FAC775; --amber-deep: #412402; --amber-dark: #633806;
+  --bg: #1a1410; --bg2: #221c16; --bg3: #2c241c; --bg4: #352c22;
+  --border: rgba(186,117,23,0.2); --border2: rgba(186,117,23,0.38);
+  --text: #f0e6d3; --text2: #b09070; --text3: #7a6045;
+  --font-display: 'Frank Ruhl Libre', Georgia, serif;
+  --font-body: 'Heebo', system-ui, sans-serif;
+  --r: 8px; --rl: 12px;
+}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 20px; overflow: hidden; }
+
+/* APP WRAPPER */
+.app-wrap { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+
+/* HEADER — compact single line */
+.header { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 8px 80px 6px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.header h1 { font-family: var(--font-display); font-size: 24px; color: var(--amber-mid); line-height: 1; }
+.header-date { font-size: 15px; color: var(--amber); }
+#sync-status { font-size: 12px; color: var(--amber); min-width: 80px; }
+.admin-btn { position: fixed; left: 8px; top: 8px; z-index: 20; background: var(--amber-deep); border: 1px solid var(--amber); border-radius: 20px; padding: 6px 14px; font-size: 14px; color: var(--amber-mid); cursor: pointer; font-family: var(--font-body); font-weight: 500; }
+
+/* TABS */
+.tabs { display: flex; flex-direction: row-reverse; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab { flex: 1; padding: 10px 4px; text-align: center; border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: 17px; color: var(--text3); border-bottom: 2px solid transparent; }
+.tab.active { color: var(--amber-mid); border-bottom-color: var(--amber); }
+
+/* MAIN */
+.main { flex: 1; overflow: hidden; width: 100%; display: flex; flex-direction: column; }
+.section { display: none; flex: 1; overflow: hidden; }
+.section.active { display: flex; }
+
+/* REGISTRO — two column landscape layout */
+#tab-registro { flex-direction: row; }
+.col-left { width: 38%; display: flex; flex-direction: column; padding: 8px 6px 8px 10px; border-left: 1px solid var(--border); }
+.col-right { flex: 1; display: flex; flex-direction: column; padding: 8px 10px 8px 6px; overflow: hidden; }
+.col-right-scroll { flex: 1; overflow-y: auto; }
+
+/* CARDS */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rl); padding: 10px 12px; margin-bottom: 8px; }
+.step-label { font-size: 12px; font-weight: 500; color: var(--text3); margin-bottom: 8px; }
+
+/* SEARCH */
+.search-wrap { position: relative; margin-bottom: 8px; }
+.search-input { width: 100%; padding: 13px 14px; border: 1px solid var(--border2); border-radius: var(--r); background: var(--bg3); color: var(--text); font-family: var(--font-body); font-size: 20px; outline: none; direction: rtl; text-align: right; }
+.search-input::placeholder { color: var(--text3); }
+.search-input:focus { border-color: var(--amber); }
+.dropdown { position: absolute; top: calc(100% + 4px); right: 0; left: 0; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); max-height: 200px; overflow-y: auto; z-index: 50; }
+.dropdown-item { padding: 13px 14px; cursor: pointer; font-size: 19px; color: var(--text); border-bottom: 1px solid var(--border); text-align: right; }
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:active { background: var(--bg4); }
+.dropdown-item.new-item { color: var(--amber-mid); }
+.sel-display { padding: 12px 14px; background: var(--amber-deep); border: 1px solid var(--amber); border-radius: var(--r); font-size: 19px; color: var(--amber-mid); font-weight: 500; display: none; }
+
+/* CART */
+.cart-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); direction: rtl; }
+.cart-item:last-child { border-bottom: none; }
+.cart-item-name { font-size: 15px; color: var(--text); flex: 1; }
+.cart-qty-row { display: flex; align-items: center; gap: 6px; }
+.cart-qty-btn { width: 30px; height: 30px; border: 1px solid var(--border2); background: var(--bg3); border-radius: 6px; cursor: pointer; font-size: 18px; color: var(--amber-mid); display: flex; align-items: center; justify-content: center; }
+.cart-qty-num { font-size: 16px; font-weight: 700; min-width: 20px; text-align: center; color: var(--text); }
+.cart-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 20px; padding: 0 2px; }
+
+/* CONFIRM */
+.confirm-btn { width: 100%; padding: 16px; background: var(--amber); border: none; border-radius: var(--r); color: #fff; font-size: 22px; font-weight: 500; cursor: pointer; font-family: var(--font-body); margin-top: 8px; }
+.confirm-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.confirm-btn:not(:disabled):active { opacity: 0.75; }
+
+/* PRODUCTS */
+.prod-section { margin-bottom: 10px; }
+.prod-section:last-child { margin-bottom: 0; }
+.prod-section-title { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.prod-section-title::before { content: ''; flex: 1; height: 1px; background: var(--border); }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.prod-btn { padding: 16px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; text-align: center; font-family: var(--font-body); position: relative; }
+.prod-btn:active { border-color: var(--amber); background: var(--bg4); }
+.prod-btn .pname { font-size: 18px; color: var(--text); font-weight: 500; }
+.prod-btn .badge { position: absolute; top: -7px; left: -7px; background: var(--amber); color: #fff; font-size: 13px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.food-lock { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.food-lock span { font-size: 14px; color: var(--text3); }
+.unlock-btn { padding: 6px 12px; background: transparent; border: 1px solid var(--border2); border-radius: 20px; font-size: 13px; color: var(--text3); cursor: pointer; font-family: var(--font-body); white-space: nowrap; }
+
+/* OTHER TABS */
+.tab-scroll { flex: 1; overflow-y: auto; padding: 10px 14px; }
+.month-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.month-row select { flex: 1; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text); font-family: var(--font-body); font-size: 16px; outline: none; direction: rtl; }
+.export-btn { padding: 10px 14px; background: transparent; border: 1px solid var(--border2); border-radius: var(--r); font-size: 15px; color: var(--text2); cursor: pointer; font-family: var(--font-body); white-space: nowrap; }
+.date-group { margin-bottom: 14px; }
+.date-title { font-size: 13px; font-weight: 500; color: var(--amber-mid); margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid var(--border2); }
+.sum-row { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.sum-row:last-child { border-bottom: none; }
+.sum-name { font-size: 16px; font-weight: 500; color: var(--text); }
+.sum-badge { display: inline-block; background: var(--amber-deep); color: var(--amber-mid); font-size: 12px; padding: 2px 8px; border-radius: 20px; margin-right: 6px; }
+.sum-detail { font-size: 13px; color: var(--text3); margin-top: 2px; line-height: 1.5; }
+
+/* ADMIN */
+.admin-block { margin-bottom: 1rem; }
+.admin-title { font-size: 13px; font-weight: 500; color: var(--text3); margin-bottom: 8px; }
+.add-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.add-row input { flex: 1; padding: 10px 12px; border: 1px solid var(--border2); border-radius: var(--r); background: var(--bg3); color: var(--text); font-family: var(--font-body); font-size: 16px; outline: none; text-align: right; direction: rtl; }
+.add-btn { padding: 10px 16px; background: var(--amber); border: none; border-radius: var(--r); color: white; font-size: 15px; cursor: pointer; font-family: var(--font-body); white-space: nowrap; }
+.item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 15px; color: var(--text); }
+.item-row:last-child { border-bottom: none; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 22px; padding: 0 4px; }
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+.food-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+.food-toggle-row span { font-size: 16px; color: var(--text); }
+.toggle-btn { padding: 8px 18px; border-radius: 20px; font-size: 15px; cursor: pointer; border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); font-family: var(--font-body); }
+.toggle-btn.on { background: #2a4a10; border-color: #3B6D11; color: #8fcf4a; }
+
+/* OVERLAYS */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+.overlay-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--rl); padding: 24px 20px; width: 100%; max-width: 360px; direction: rtl; }
+.overlay-title { font-family: var(--font-display); font-size: 20px; color: var(--amber-mid); margin-bottom: 4px; }
+.overlay-sub { font-size: 14px; color: var(--text3); margin-bottom: 16px; }
+.overlay-err { font-size: 13px; color: #e74c3c; margin-bottom: 8px; display: none; }
+.overlay-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border2); border-radius: var(--r); background: var(--bg3); color: var(--text); font-family: var(--font-body); font-size: 16px; outline: none; text-align: right; direction: rtl; margin-bottom: 10px; }
+.overlay-input:focus { border-color: var(--amber); }
+.pin-digit { width: 54px; height: 60px; text-align: center; font-size: 26px; font-weight: 700; border: 2px solid var(--border2); border-radius: var(--r); background: var(--bg3); color: var(--text); font-family: var(--font-display); outline: none; }
+.pin-digit:focus { border-color: var(--amber); }
+.overlay-row { display: flex; gap: 8px; margin-top: 4px; }
+.overlay-ok { flex: 1; padding: 12px; background: var(--amber); border: none; border-radius: var(--r); color: white; font-size: 15px; cursor: pointer; font-family: var(--font-body); }
+.overlay-cancel { padding: 12px 16px; background: transparent; border: 1px solid var(--border2); border-radius: var(--r); font-size: 15px; color: var(--text3); cursor: pointer; font-family: var(--font-body); }
+
+.empty { text-align: center; color: var(--text3); font-size: 15px; padding: 1.5rem 0; }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #2a4a10; border: 1px solid #3B6D11; color: #8fcf4a; padding: 10px 20px; border-radius: var(--r); font-size: 15px; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 400; white-space: nowrap; }
+.toast.show { opacity: 1; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+<div class="header">
+  <h1>🍺 פאב-לו חוקוק</h1>
+  <div class="header-date" id="header-date"></div>
+  <div id="sync-status" style="font-size:10px;color:var(--amber);min-height:12px;"></div>
+  <button class="admin-btn" id="admin-btn" onclick="onAdminBtn()">ניהול</button>
+</div>
+
+<div class="tabs">
+  <button class="tab" data-tab="registro" onclick="showTab('registro')">רישום</button>
+  <button class="tab" data-tab="resumen" id="tab-btn-resumen" onclick="showTab('resumen')" style="display:none;">סיכום</button>
+  <button class="tab" data-tab="admin" id="tab-btn-admin" onclick="showTab('admin')" style="display:none;">ניהול</button>
+</div>
+
+<div class="main">
+
+  <!-- TAB: רישום -->
+  <div id="tab-registro" class="section">
+    <!-- LEFT: who + cart + confirm -->
+    <div class="col-left">
+      <div class="card">
+        <div class="step-label">מי שותה?</div>
+        <div class="search-wrap">
+          <input class="search-input" id="member-search" placeholder="חפש שם..." autocomplete="off"
+            oninput="onSearchInput()" onfocus="onSearchFocus()" onblur="onSearchBlur()" />
+          <div class="dropdown" id="member-dropdown" style="display:none;"></div>
+        </div>
+        <div class="sel-display" id="sel-display"></div>
+        <button onclick="openNewMember('')" style="width:100%;margin-top:8px;padding:8px;background:transparent;border:1px dashed var(--border2);border-radius:var(--r);color:var(--text3);font-size:13px;cursor:pointer;font-family:var(--font-body);">+ הוסף חבר חדש</button>
+      </div>
+      <div class="card" id="today-summary-card" style="display:none;">
+        <div class="step-label">צריכה היום</div>
+        <div id="today-summary-list"></div>
+      </div>
+      <div class="card" id="cart-card" style="display:none; flex:1; overflow-y:auto;">
+        <div class="step-label">הזמנה</div>
+        <div id="cart-list"></div>
+      </div>
+      <button class="confirm-btn" id="confirm-btn" disabled onclick="confirmOrder()">אשר צריכה</button>
+    </div>
+
+    <!-- RIGHT: products -->
+    <div class="col-right">
+      <div class="col-right-scroll">
+        <div class="card">
+          <div class="prod-section">
+            <div class="prod-section-title">בירות</div>
+            <div class="prod-grid" id="beer-grid"></div>
+          </div>
+          <div class="prod-section">
+            <div class="prod-section-title">משקאות</div>
+            <div class="prod-grid" id="drinks-grid"></div>
+          </div>
+          <div class="prod-section">
+            <div class="prod-section-title">אוכל</div>
+            <div class="food-lock" id="food-lock">
+              <button class="unlock-btn" onclick="requestFoodUnlock()">🔒 פתח עם קוד</button>
+              <span>רק עם אישור מנהל</span>
+            </div>
+            <button id="food-close-btn" onclick="closeFood()" style="display:none; margin-bottom:6px; padding:5px 10px; background:transparent; border:1px solid var(--border2); border-radius:20px; font-size:12px; color:var(--text3); cursor:pointer; font-family:var(--font-body);">🔒 סגור אוכל</button>
+            <div class="prod-grid" id="food-grid" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: סיכום -->
+  <div id="tab-resumen" class="section">
+    <div class="tab-scroll">
+      <div class="card">
+        <div class="month-row">
+          <select id="month-select" onchange="renderSummary()"></select>
+          <button class="export-btn" onclick="exportCSV()">ייצוא Excel</button>
+        </div>
+        <div id="summary-list"><div class="empty">אין רישומים</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ניהול -->
+  <div id="tab-admin" class="section">
+    <div class="tab-scroll">
+      <div class="card">
+        <div class="admin-block">
+          <div class="admin-title">תפריט אוכל</div>
+          <div class="food-toggle-row">
+            <span>הפעל אוכל עכשיו</span>
+            <button class="toggle-btn" id="food-toggle-btn" onclick="adminToggleFood()">כבוי</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- MENU MANAGEMENT -->
+        <div class="admin-block">
+          <div class="admin-title">ניהול תפריט</div>
+          <div class="add-row" style="flex-wrap:wrap; gap:6px;">
+            <input id="new-prod-name" placeholder="שם מוצר..." style="min-width:120px;" />
+            <input id="new-prod-price" placeholder="מחיר ₪" type="number" inputmode="numeric" style="width:80px;" />
+            <select id="new-prod-cat" style="padding:10px 8px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r); color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
+              <option value="בירה">בירה</option>
+              <option value="משקה">משקה</option>
+              <option value="אוכל">אוכל</option>
+            </select>
+            <button class="add-btn" onclick="addProduct()">הוסף</button>
+          </div>
+          <div id="menu-list"></div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="admin-block">
+          <div class="admin-title">עריכת רישומי היום</div>
+          <div id="edit-today-list"><div class="empty" style="font-size:13px;">אין רישומים להיום</div></div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="admin-block">
+          <div class="admin-title">שליחת דוח במייל</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:6px;align-items:center;direction:rtl;">
+              <label style="font-size:13px;color:var(--text3);white-space:nowrap;">מ:</label>
+              <input id="report-from" type="date" style="flex:1;padding:8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;" />
+              <label style="font-size:13px;color:var(--text3);white-space:nowrap;">עד:</label>
+              <input id="report-to" type="date" style="flex:1;padding:8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;" />
+            </div>
+            <select id="report-member" onchange="onReportMemberChange()" style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;direction:rtl;">
+              <option value="">— בחר חבר —</option>
+            </select>
+            <div id="report-member-email" style="font-size:12px;color:var(--text3);min-height:16px;"></div>
+            <button class="add-btn" style="width:100%;" onclick="sendEmailReport()">שלח דוח במייל</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+          <div class="add-row">
+            <input id="new-member-input" placeholder="שם..." />
+            <button class="add-btn" onclick="addMemberManual()">הוסף</button>
+          </div>
+          <div id="members-list"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="admin-block">
+          <div class="admin-title">קוד מנהל (PIN)</div>
+          <div class="add-row">
+            <input id="new-pin-input" type="password" placeholder="קוד חדש (4 ספרות)" maxlength="4" inputmode="numeric" />
+            <button class="add-btn" onclick="changePin()">שמור</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);">ברירת מחדל: 1234</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PIN OVERLAY -->
+<div class="overlay" id="pin-overlay" style="display:none;">
+  <div class="overlay-box">
+    <div class="overlay-title">אזור מנהל</div>
+    <div class="overlay-sub" id="pin-sub">הכנס קוד PIN</div>
+    <div class="overlay-err" id="pin-err">קוד שגוי, נסה שוב</div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-bottom:16px;" dir="ltr">
+      <input class="pin-digit" id="pd0" maxlength="1" inputmode="numeric" pattern="[0-9]" type="tel" oninput="pinDigit(0)" onkeydown="pinKey(event,0)" />
+      <input class="pin-digit" id="pd1" maxlength="1" inputmode="numeric" pattern="[0-9]" type="tel" oninput="pinDigit(1)" onkeydown="pinKey(event,1)" />
+      <input class="pin-digit" id="pd2" maxlength="1" inputmode="numeric" pattern="[0-9]" type="tel" oninput="pinDigit(2)" onkeydown="pinKey(event,2)" />
+      <input class="pin-digit" id="pd3" maxlength="1" inputmode="numeric" pattern="[0-9]" type="tel" oninput="pinDigit(3)" onkeydown="pinKey(event,3)" />
+    </div>
+    <div class="overlay-row">
+      <button class="overlay-ok" onclick="checkPin()">אישור</button>
+      <button class="overlay-cancel" onclick="closePin()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MEMBER OVERLAY -->
+<div class="overlay" id="editmember-overlay" style="display:none;">
+  <div class="overlay-box">
+    <div class="overlay-title">עריכת חבר</div>
+    <div class="overlay-err" id="em-err">שם פרטי ושם משפחה הם חובה</div>
+    <input class="overlay-input" id="em-first" placeholder="שם פרטי *" />
+    <input class="overlay-input" id="em-last" placeholder="שם משפחה *" />
+    <input class="overlay-input" id="em-phone" placeholder="טלפון (לא חובה)" type="tel" inputmode="numeric" />
+    <input class="overlay-input" id="em-email" placeholder="אימייל (לא חובה)" type="email" inputmode="email" />
+    <div class="overlay-row">
+      <button class="overlay-ok" onclick="confirmEditMember()">שמור</button>
+      <button class="overlay-cancel" onclick="closeEditMember()">ביטול</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="newmember-overlay" style="display:none;">
+  <div class="overlay-box">
+    <div class="overlay-title">רישום חבר חדש</div>
+    <div class="overlay-sub">השם לא קיים — מלא פרטים להרשמה</div>
+    <div class="overlay-err" id="nm-err">שם פרטי ושם משפחה הם חובה</div>
+    <input class="overlay-input" id="nm-first" placeholder="שם פרטי *" />
+    <input class="overlay-input" id="nm-last" placeholder="שם משפחה *" />
+    <input class="overlay-input" id="nm-phone" placeholder="טלפון (לא חובה)" type="tel" inputmode="numeric" />
+    <input class="overlay-input" id="nm-email" placeholder="אימייל (לא חובה)" type="email" inputmode="email" />
+    <div class="overlay-row">
+      <button class="overlay-ok" onclick="confirmNewMember()">הרשם וצרף</button>
+      <button class="overlay-cancel" onclick="closeNewMember()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var DEFAULT_MENU = [
+  {name:'חבית \u00bd', cat:'בירה', price:25},
+  {name:'חבית \u2153', cat:'בירה', price:20},
+  {name:'גולדסטאר \u00bd', cat:'בירה', price:20},
+  {name:'גולדסטאר \u2153', cat:'בירה', price:15},
+  {name:'מכבי \u00bd', cat:'בירה', price:20},
+  {name:'בירה \u2153', cat:'בירה', price:20},
+  {name:'וויסקי', cat:'משקה', price:25},
+  {name:'יין', cat:'משקה', price:25},
+  {name:'קוקטייל', cat:'משקה', price:25},
+  {name:'XL', cat:'משקה', price:5},
+  {name:'סודה', cat:'משקה', price:5},
+  {name:'המבורגר', cat:'אוכל', price:45},
+  {name:'נקניקיה ולחמניה', cat:'אוכל', price:15},
+  {name:"צ'יפס", cat:'אוכל', price:15},
+  {name:'אמפנדס', cat:'אוכל', price:10}
+];
+var menu = DEFAULT_MENU.slice(); // always load fresh from cloud, localStorage is just a cache
+var BEERS = [], DRINKS = [], FOODS = [], ALL_PRODUCTS = [];
+
+function refreshMenuArrays() {
+  BEERS  = menu.filter(function(p){ return p.cat==='בירה'; });
+  DRINKS = menu.filter(function(p){ return p.cat==='משקה'; });
+  FOODS  = menu.filter(function(p){ return p.cat==='אוכל'; });
+  ALL_PRODUCTS = menu.slice();
+}
+refreshMenuArrays();
+
+function getPrice(productName) {
+  for (var i=0; i<menu.length; i++) {
+    if (menu[i].name === productName) return menu[i].price || 0;
+  }
+  return 0;
+}
+function saveMenu() {
+  localStorage.setItem('pub_menu', JSON.stringify(menu));
+  var rows = menu.map(function(p){ return [p.name, p.cat, p.price]; });
+  fetch(SHEETS_URL + '?action=savemenu&data=' + encodeURIComponent(JSON.stringify(rows))).catch(function(){});
+}
+function addProduct() {
+  var name = document.getElementById('new-prod-name').value.trim();
+  var price = parseInt(document.getElementById('new-prod-price').value) || 0;
+  var cat = document.getElementById('new-prod-cat').value;
+  if (!name) return;
+  for (var i=0; i<menu.length; i++) { if (menu[i].name===name) { showToast('כבר קיים'); return; } }
+  menu.push({name:name, cat:cat, price:price});
+  saveMenu(); refreshMenuArrays(); renderAllGrids(); renderMenuList();
+  document.getElementById('new-prod-name').value = '';
+  document.getElementById('new-prod-price').value = '';
+  showToast('נוסף: ' + name);
+}
+function deleteProduct(i) {
+  menu.splice(i,1);
+  saveMenu(); refreshMenuArrays(); renderAllGrids(); renderMenuList();
+}
+function updateProductPrice(i, val) {
+  menu[i].price = parseInt(val) || 0;
+  saveMenu(); refreshMenuArrays();
+}
+function renderMenuList() {
+  var el = document.getElementById('menu-list');
+  if (!el) return;
+  var catOrder = {'בירה':0,'משקה':1,'אוכל':2};
+  el.innerHTML = menu.map(function(p, i) {
+    return '<div class="item-row">' +
+      '<span style="flex:1;font-size:14px;">' + p.name + ' <span style="color:var(--text3);font-size:11px;">(' + p.cat + ')</span></span>' +
+      '<input type="number" value="' + (p.price||0) + '" style="width:60px;padding:4px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;text-align:center;" onchange="updateProductPrice(' + i + ',this.value)" />' +
+      '<span style="font-size:12px;color:var(--text3);margin:0 4px;">₪</span>' +
+      '<button class="del-btn" onclick="deleteProduct(' + i + ')">×</button>' +
+    '</div>';
+  }).join('') || '<div class="empty">אין מוצרים</div>';
+}
+var MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+var DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+
+function loadMembers() {
+  var s = localStorage.getItem('pub_members');
+  if (s) {
+    try {
+      return JSON.parse(s).map(function(m) {
+        return typeof m === 'string' ? {name:m, phone:''} : m;
+      });
+    } catch(e) {}
+  }
+  return ['אריאל','דנה','יוסי','מירי','איתן','תמר','אבי','רונית','נועם','שירה',
+          'גל','עידו','נועה','לירון','ברק','אורי','מיכל','יעל','רון','עמית']
+    .map(function(n){ return {name:n, phone:''}; });
+}
+
+var members = loadMembers();
+var orders = JSON.parse(localStorage.getItem('pub_orders') || '[]');
+var PIN = localStorage.getItem('pub_pin') || '1234';
+var isAdmin = false;
+var foodUnlocked = false;
+var adminFoodOn = false;
+var pinCallback = null;
+var selMember = null;
+var blurTimer = null;
+var cart = [];
+var syncPending = false;
+
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbySL7C_eGz4FKOSrx8NDO7Flb4bdlpXCDOlbtAIVvCxP5IrJ1vEaIVdz3MAqSpybBEa1w/exec';
+
+function saveMembers() {
+  localStorage.setItem('pub_members', JSON.stringify(members));
+  var rows = members.map(function(m){ return [m.name||'', m.phone||'', m.email||'', m.code||'']; });
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'savemembers', data: rows })
+  }).catch(function(){});
+}
+function savePin(){ localStorage.setItem('pub_pin', PIN); }
+function getMemberNames(){ return members.map(function(m){ return m.name; }); }
+
+function saveOrders() {
+  localStorage.setItem('pub_orders', JSON.stringify(orders));
+  syncToCloud();
+}
+
+function syncToCloud() {
+  if (syncPending) return;
+  syncPending = true;
+  showSyncStatus('מסנכרן...');
+  var lastSynced = localStorage.getItem('pub_last_synced_ts') || '';
+  var newOrders = orders.filter(function(o){ return o.ts > lastSynced; });
+  if (!newOrders.length) {
+    syncPending = false;
+    showSyncStatus('✓ שמור בענן');
+    setTimeout(function(){ showSyncStatus(''); }, 2000);
+    return;
+  }
+  var rows = newOrders.map(function(o){ return [o.ts, o.member, o.product, o.cat, o.qty]; });
+  fetch(SHEETS_URL + '?action=append&data=' + encodeURIComponent(JSON.stringify(rows)))
+    .then(function(r){ return r.json(); })
+    .then(function(){
+      syncPending = false;
+      var maxTs = newOrders.reduce(function(m,o){ return o.ts > m ? o.ts : m; }, '');
+      localStorage.setItem('pub_last_synced_ts', maxTs);
+      showSyncStatus('✓ שמור בענן');
+      setTimeout(function(){ showSyncStatus(''); }, 3000);
+    })
+    .catch(function(){
+      syncPending = false;
+      showSyncStatus('⚠ שמור מקומית בלבד');
+      setTimeout(function(){ showSyncStatus(''); }, 4000);
+    });
+}
+
+function loadFromCloud() {
+  showSyncStatus('טוען נתונים...');
+  fetch(SHEETS_URL + '?action=load')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.orders && data.orders.length > 0) {
+        orders = data.orders.map(function(row){
+          return {ts:row[0], member:row[1], product:row[2], cat:row[3], qty:Number(row[4])};
+        }).filter(function(o){ return o.ts && o.member; });
+        localStorage.setItem('pub_orders', JSON.stringify(orders));
+        var maxTs = orders.reduce(function(m,o){ return o.ts > m ? o.ts : m; }, '');
+        localStorage.setItem('pub_last_synced_ts', maxTs);
+      }
+      if (data.members && data.members.length > 0) {
+        members = data.members.map(function(row){
+          return {name:row[0]||'', phone:row[1]||'', email:row[2]||'', code:row[3]||''};
+        }).filter(function(m){ return m.name; });
+        localStorage.setItem('pub_members', JSON.stringify(members));
+      }
+      if (data.menu && data.menu.length > 0) {
+        menu = data.menu.map(function(row){
+          return {name:row[0]||'', cat:row[1]||'משקה', price:parseInt(row[2])||0};
+        }).filter(function(p){ return p.name; });
+        localStorage.setItem('pub_menu', JSON.stringify(menu));
+        refreshMenuArrays(); renderAllGrids(); renderMenuList();
+      }
+      showSyncStatus('✓ נטען מהענן');
+      setTimeout(function(){ showSyncStatus(''); }, 3000);
+    })
+    .catch(function(){
+      showSyncStatus('⚠ אין חיבור — נתונים מקומיים');
+      setTimeout(function(){ showSyncStatus(''); }, 4000);
+    });
+}
+
+function showSyncStatus(msg) {
+  var el = document.getElementById('sync-status');
+  if (el) el.textContent = msg;
+}
+
+// ---- DATE ----
+function renderDate() {
+  var now = new Date();
+  var day = DAYS[now.getDay()];
+  var d = now.getDate();
+  var m = MONTHS[now.getMonth()];
+  var y = now.getFullYear();
+  document.getElementById('header-date').textContent = 'יום ' + day + ', ' + d + ' ב' + m + ' ' + y;
+}
+
+// ---- TABS ----
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
+  });
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (tab==='resumen') { populateMonths(); renderSummary(); }
+  if (tab==='admin') renderAdmin();
+}
+
+// ---- ADMIN LOGIN ----
+function onAdminBtn() {
+  if (!isAdmin) {
+    pinCallback = function() {
+      isAdmin = true;
+      document.getElementById('tab-btn-resumen').style.display = 'block';
+      document.getElementById('tab-btn-admin').style.display = 'block';
+      var btn = document.getElementById('admin-btn');
+      btn.textContent = 'יציאה';
+      btn.style.color = 'var(--amber-mid)';
+      btn.style.borderColor = 'var(--amber)';
+      showToast('ברוך הבא מנהל');
+    };
+    document.getElementById('pin-sub').textContent = 'הכנס קוד מנהל';
+    openPin();
+  } else {
+    isAdmin = false; adminFoodOn = false; foodUnlocked = false;
+    document.getElementById('tab-btn-resumen').style.display = 'none';
+    document.getElementById('tab-btn-admin').style.display = 'none';
+    var btn = document.getElementById('admin-btn');
+    btn.textContent = 'ניהול';
+    btn.style.color = 'var(--text3)';
+    btn.style.borderColor = 'var(--border2)';
+    renderFoodGrid();
+    showTab('registro');
+  }
+}
+
+// ---- MEMBER SEARCH ----
+function onSearchInput() {
+  var val = document.getElementById('member-search').value.trim();
+  var dd = document.getElementById('member-dropdown');
+  document.getElementById('sel-display').style.display = 'none';
+  selMember = null; updateConfirm();
+  if (!val) { dd.style.display='none'; return; }
+  var names = getMemberNames();
+  var matches = names.filter(function(n){
+    return n.indexOf(val)!==-1 || n.toLowerCase().indexOf(val.toLowerCase())!==-1;
+  }).slice(0,8);
+  var html = matches.map(function(n){
+    return '<div class="dropdown-item" onmousedown="selectMember(\''+n.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+n+'</div>';
+  }).join('');
+  var exact = names.indexOf(val) !== -1;
+  if (!exact && val.length >= 2) {
+    html += '<div class="dropdown-item new-item" onmousedown="openNewMember(\''+val.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">+ הוסף "'+val+'" כחבר חדש</div>';
+  }
+  if (!html) { dd.style.display='none'; return; }
+  dd.innerHTML = html; dd.style.display = 'block';
+}
+function onSearchFocus() { clearTimeout(blurTimer); onSearchInput(); }
+function onSearchBlur() { blurTimer = setTimeout(function(){ document.getElementById('member-dropdown').style.display='none'; }, 200); }
+
+function selectMember(name) {
+  selMember = name;
+  document.getElementById('member-search').value = '';
+  document.getElementById('member-dropdown').style.display = 'none';
+  var d = document.getElementById('sel-display');
+  d.textContent = '✓ ' + name; d.style.display = 'block';
+  renderTodaySummary(name);
+  updateConfirm();
+}
+
+function renderTodaySummary(name) {
+  var today = new Date().toDateString();
+  var todayOrders = orders.filter(function(o){
+    return o.member === name && new Date(o.ts).toDateString() === today;
+  });
+  var card = document.getElementById('today-summary-card');
+  var list = document.getElementById('today-summary-list');
+  if (!todayOrders.length) { card.style.display = 'none'; return; }
+  // aggregate by product
+  var agg = {};
+  todayOrders.forEach(function(o){
+    agg[o.product] = (agg[o.product] || 0) + o.qty;
+  });
+  var total = Object.keys(agg).reduce(function(s,p){ return s + agg[p]; }, 0);
+  list.innerHTML = Object.keys(agg).map(function(p){
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text);">' +
+      '<span>' + p + '</span><span style="color:var(--amber-mid);font-weight:500;">×' + agg[p] + '</span></div>';
+  }).join('') +
+  '<div style="display:flex;justify-content:space-between;padding:6px 0 0;font-size:13px;font-weight:500;color:var(--text3);">' +
+    '<span>סה"כ היום</span><span style="color:var(--amber);">' + total + ' פריטים</span></div>';
+  card.style.display = 'block';
+}
+
+// ---- NEW MEMBER ----
+function openNewMember(typedName) {
+  var parts = typedName.trim().split(' ');
+  document.getElementById('nm-first').value = parts[0] || '';
+  document.getElementById('nm-last').value = parts.slice(1).join(' ') || '';
+  document.getElementById('nm-phone').value = '';
+  document.getElementById('nm-email').value = '';
+  document.getElementById('nm-err').style.display = 'none';
+  document.getElementById('newmember-overlay').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('nm-first').focus(); }, 80);
+}
+function closeNewMember() {
+  document.getElementById('newmember-overlay').style.display = 'none';
+  document.getElementById('member-search').value = '';
+}
+function confirmNewMember() {
+  var first = document.getElementById('nm-first').value.trim();
+  var last = document.getElementById('nm-last').value.trim();
+  var phone = document.getElementById('nm-phone').value.trim();
+  var email = document.getElementById('nm-email').value.trim();
+  if (!first || !last) { document.getElementById('nm-err').style.display='block'; return; }
+  var full = first + ' ' + last;
+  members.push({name:full, phone:phone, email:email}); saveMembers();
+  document.getElementById('newmember-overlay').style.display = 'none';
+  selectMember(full);
+  showToast('חבר חדש: ' + full);
+}
+
+// ---- EDIT TODAY ORDERS ----
+function renderEditToday() {
+  var today = new Date().toDateString();
+  var todays = orders.map(function(o,i){ return {o:o,i:i}; })
+    .filter(function(x){ return new Date(x.o.ts).toDateString()===today; })
+    .reverse();
+  var el = document.getElementById('edit-today-list');
+  if (!el) return;
+  if (!todays.length) { el.innerHTML='<div class="empty" style="font-size:13px;">אין רישומים להיום</div>'; return; }
+  el.innerHTML = todays.map(function(x) {
+    var d = new Date(x.o.ts);
+    var hm = d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    return '<div class="item-row" style="font-size:13px;">' +
+      '<span style="flex:1;">' + x.o.member + ' — ' + x.o.product + ' ×' + x.o.qty + '</span>' +
+      '<span style="color:var(--text3);font-size:11px;margin-left:6px;">' + hm + '</span>' +
+      '<button class="del-btn" style="font-size:18px;" onclick="deleteOrderAdmin(' + x.i + ')">×</button>' +
+    '</div>';
+  }).join('');
+}
+function deleteOrderAdmin(i) {
+  orders.splice(i,1);
+  saveOrders();
+  renderEditToday();
+  showToast('רישום נמחק');
+}
+
+function onReportMemberChange() {
+  var name = document.getElementById('report-member').value;
+  var info = document.getElementById('report-member-email');
+  if (!name) { info.textContent = ''; return; }
+  if (name === '__all__') {
+    info.textContent = '✓ pubhukuk@gmail.com';
+    info.style.color = 'var(--amber)';
+    return;
+  }
+  var m = members.find(function(x){ return x.name===name; });
+  info.textContent = m && m.email ? '✓ ' + m.email : '⚠ אין אימייל לחבר זה';
+  info.style.color = (m && m.email) ? 'var(--amber)' : '#e74c3c';
+}
+
+function sendEmailReport() {
+  var from = document.getElementById('report-from').value;
+  var to = document.getElementById('report-to').value;
+  var memberName = document.getElementById('report-member').value;
+  if (!memberName) { showToast('נא לבחור חבר'); return; }
+  if (!from || !to) { showToast('נא לבחור טווח תאריכים'); return; }
+
+  var fromDate = new Date(from); fromDate.setHours(0,0,0,0);
+  var toDate = new Date(to); toDate.setHours(23,59,59,999);
+
+  var emailTo, data;
+
+  if (memberName === '__all__') {
+    // Send summary of all consumers to pubhukuk
+    emailTo = 'pubhukuk@gmail.com';
+    var filtered = orders.filter(function(o){
+      return new Date(o.ts) >= fromDate && new Date(o.ts) <= toDate;
+    });
+    if (!filtered.length) { showToast('אין רישומים בתאריכים אלה'); return; }
+    var byMember = {};
+    filtered.forEach(function(o){
+      if (!byMember[o.member]) byMember[o.member] = {items:{}, total:0, paid:0};
+      byMember[o.member].items[o.product] = (byMember[o.member].items[o.product]||0) + o.qty;
+      byMember[o.member].total += o.qty;
+      byMember[o.member].paid += getPrice(o.product) * o.qty;
+    });
+    data = Object.keys(byMember).sort().map(function(name){
+      var d = byMember[name];
+      return [name, d.total, d.paid, Object.keys(d.items).map(function(p){ return p+': '+d.items[p]; }).join(', ')];
+    });
+  } else {
+    // Send individual report
+    var member = members.find(function(x){ return x.name===memberName; });
+    if (!member || !member.email) { showToast('לחבר זה אין אימייל'); return; }
+    emailTo = member.email;
+    var filtered = orders.filter(function(o){
+      return o.member === memberName && new Date(o.ts) >= fromDate && new Date(o.ts) <= toDate;
+    });
+    if (!filtered.length) { showToast('אין רישומים בתאריכים אלה'); return; }
+    var agg = {}, totalItems = 0, totalPaid = 0;
+    filtered.forEach(function(o){
+      agg[o.product] = (agg[o.product]||0) + o.qty;
+      totalItems += o.qty;
+      totalPaid += getPrice(o.product) * o.qty;
+    });
+    data = [[memberName, totalItems, totalPaid, Object.keys(agg).map(function(p){ return p+': '+agg[p]; }).join(', ')]];
+  }
+
+  showToast('שולח...');
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    body: JSON.stringify({action:'sendemail', email:emailTo, from:from, to:to, data:data})
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ showToast(res.ok ? 'מייל נשלח ✓' : 'שגיאה: ' + (res.error||'')); })
+    .catch(function(){ showToast('שגיאה בשליחה'); });
+}
+
+// ---- CART ----
+function cartGet(name) {
+  for (var i=0; i<cart.length; i++) { if (cart[i].name===name) return i; }
+  return -1;
+}
+function cartAdd(p) {
+  var idx = cartGet(p.name);
+  if (idx === -1) { cart.push({name:p.name, cat:p.cat, qty:1}); }
+  else { cart[idx].qty++; }
+  renderAllGrids(); renderCart(); updateConfirm();
+}
+function cartChange(name, delta) {
+  var idx = cartGet(name);
+  if (idx === -1) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) { cart.splice(idx, 1); }
+  renderAllGrids(); renderCart(); updateConfirm();
+}
+function cartRemove(name) {
+  var idx = cartGet(name);
+  if (idx !== -1) { cart.splice(idx, 1); }
+  renderAllGrids(); renderCart(); updateConfirm();
+}
+
+function renderCart() {
+  var card = document.getElementById('cart-card');
+  if (cart.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('cart-list').innerHTML = cart.map(function(item) {
+    return '<div class="cart-item">' +
+      '<span class="cart-item-name">' + item.name + '</span>' +
+      '<div class="cart-qty-row">' +
+        '<button class="cart-qty-btn" onclick="cartChange(\''+item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', -1)">−</button>' +
+        '<span class="cart-qty-num">'+item.qty+'</span>' +
+        '<button class="cart-qty-btn" onclick="cartChange(\''+item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\', 1)">+</button>' +
+        '<button class="cart-del" onclick="cartRemove(\''+item.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">×</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ---- PRODUCTS ----
+function makeGrid(items) {
+  return items.map(function(p) {
+    var idx = cartGet(p.name);
+    var badge = idx !== -1 ? '<span class="badge">'+cart[idx].qty+'</span>' : '';
+    return '<button class="prod-btn" onclick=\'cartAdd('+JSON.stringify(p)+')\'>' + badge + '<div class="pname">'+p.name+'</div></button>';
+  }).join('');
+}
+function renderBeerGrid() { document.getElementById('beer-grid').innerHTML = makeGrid(BEERS); }
+function renderDrinksGrid() { document.getElementById('drinks-grid').innerHTML = makeGrid(DRINKS); }
+function renderFoodGrid() {
+  var show = foodUnlocked || adminFoodOn;
+  document.getElementById('food-lock').style.display = show ? 'none' : 'flex';
+  document.getElementById('food-grid').style.display = show ? 'grid' : 'none';
+  document.getElementById('food-close-btn').style.display = show ? 'block' : 'none';
+  if (show) { document.getElementById('food-grid').innerHTML = makeGrid(FOODS); }
+}
+function renderAllGrids() { renderBeerGrid(); renderDrinksGrid(); renderFoodGrid(); }
+
+// ---- CONFIRM ----
+function updateConfirm() {
+  var btn = document.getElementById('confirm-btn');
+  var ok = selMember && cart.length > 0;
+  btn.disabled = !ok;
+  if (ok) {
+    var total = cart.reduce(function(s,i){ return s+i.qty; }, 0);
+    btn.textContent = '✓ אשר: ' + selMember + ' — ' + total + ' פריטים';
+  } else {
+    btn.textContent = 'אשר צריכה';
+  }
+}
+
+function confirmOrder() {
+  var ts = new Date().toISOString();
+  cart.forEach(function(item) {
+    orders.push({member:selMember, product:item.name, cat:item.cat, qty:item.qty, ts:ts});
+  });
+  saveOrders();
+  var total = cart.reduce(function(s,i){ return s+i.qty; }, 0);
+  showToast(selMember + ' — ' + total + ' פריטים ✓');
+  // reset
+  selMember = null; cart = [];
+  document.getElementById('member-search').value = '';
+  document.getElementById('sel-display').style.display = 'none';
+  document.getElementById('cart-card').style.display = 'none';
+  document.getElementById('today-summary-card').style.display = 'none';
+  renderAllGrids(); updateConfirm();
+}
+
+// ---- FOOD LOCK ----
+function closeFood() {
+  foodUnlocked = false;
+  adminFoodOn = false;
+  // remove food items from cart
+  cart = cart.filter(function(i){ return i.cat !== 'אוכל'; });
+  var btn = document.getElementById('food-toggle-btn');
+  if (btn) { btn.textContent = 'כבוי'; btn.classList.remove('on'); }
+  renderAllGrids(); renderCart(); updateConfirm();
+}
+function requestFoodUnlock() {
+  pinCallback = function(){ foodUnlocked=true; renderFoodGrid(); showToast('תפריט אוכל הופעל ✓'); };
+  document.getElementById('pin-sub').textContent = 'הכנס קוד לפתיחת אוכל';
+  openPin();
+}
+function adminToggleFood() {
+  adminFoodOn = !adminFoodOn; foodUnlocked = adminFoodOn;
+  var btn = document.getElementById('food-toggle-btn');
+  btn.textContent = adminFoodOn ? 'פעיל':'כבוי'; btn.classList.toggle('on', adminFoodOn);
+  renderFoodGrid();
+}
+
+// ---- PIN ----
+function openPin() {
+  [0,1,2,3].forEach(function(i){ document.getElementById('pd'+i).value=''; });
+  document.getElementById('pin-err').style.display = 'none';
+  document.getElementById('pin-overlay').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('pd0').focus(); }, 80);
+}
+function closePin() {
+  document.getElementById('pin-overlay').style.display = 'none';
+  pinCallback = null;
+}
+function pinDigit(i) {
+  var el = document.getElementById('pd'+i);
+  // keep only last char typed
+  el.value = el.value.replace(/[^0-9]/g,'').slice(-1);
+  if (el.value && i < 3) document.getElementById('pd'+(i+1)).focus();
+  // auto-check when last digit filled
+  if (i === 3 && el.value) checkPin();
+}
+function pinKey(e, i) {
+  if (e.key === 'Backspace' && !document.getElementById('pd'+i).value && i > 0) {
+    document.getElementById('pd'+(i-1)).focus();
+  }
+  if (e.key === 'Enter') checkPin();
+}
+function checkPin() {
+  var entered = [0,1,2,3].map(function(i){ return document.getElementById('pd'+i).value; }).join('');
+  if (entered === PIN) {
+    var cb = pinCallback;
+    closePin();
+    if (cb) cb();
+  } else {
+    document.getElementById('pin-err').style.display = 'block';
+    [0,1,2,3].forEach(function(i){ document.getElementById('pd'+i).value=''; });
+    document.getElementById('pd0').focus();
+  }
+}
+
+// ---- SUMMARY ----
+function populateMonths() {
+  var seen = {};
+  orders.forEach(function(o){ var d=new Date(o.ts); seen[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')]=1; });
+  var now = new Date();
+  seen[now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')]=1;
+  var sel = document.getElementById('month-select');
+  sel.innerHTML = Object.keys(seen).sort().reverse().map(function(k){
+    var p=k.split('-'); return '<option value="'+k+'">'+MONTHS[parseInt(p[1])-1]+' '+p[0]+'</option>';
+  }).join('');
+}
+function renderSummary() {
+  var val = document.getElementById('month-select').value;
+  if (!val) return;
+  var p=val.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
+  var filtered = orders.filter(function(o){ var d=new Date(o.ts); return d.getFullYear()===y&&d.getMonth()+1===mo; });
+  var el = document.getElementById('summary-list');
+  if (!filtered.length){ el.innerHTML='<div class="empty">אין רישומים בחודש זה</div>'; return; }
+  var byDate={};
+  filtered.forEach(function(o){
+    var d=new Date(o.ts), dk=d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});
+    if (!byDate[dk]) byDate[dk]={};
+    if (!byDate[dk][o.member]) byDate[dk][o.member]={total:0,items:{}};
+    byDate[dk][o.member].total+=o.qty;
+    byDate[dk][o.member].items[o.product]=(byDate[dk][o.member].items[o.product]||0)+o.qty;
+  });
+  var html='';
+  Object.keys(byDate).sort().reverse().forEach(function(date){
+    var md=byDate[date];
+    var rows=Object.keys(md).sort(function(a,b){return md[b].total-md[a].total;}).map(function(name){
+      var data=md[name];
+      var det=Object.keys(data.items).map(function(pp){return pp+': '+data.items[pp];}).join(' · ');
+      return '<div class="sum-row"><div><span class="sum-name">'+name+'</span><span class="sum-badge">'+data.total+' פריטים</span></div><div class="sum-detail">'+det+'</div></div>';
+    }).join('');
+    html+='<div class="date-group"><div class="date-title">'+date+'</div>'+rows+'</div>';
+  });
+  el.innerHTML=html;
+}
+function exportCSV() {
+  var val = document.getElementById('month-select').value; if (!val) return;
+  var p = val.split('-'), y = parseInt(p[0]), mo = parseInt(p[1]);
+  var f = orders.filter(function(o){ var d=new Date(o.ts); return d.getFullYear()===y&&d.getMonth()+1===mo; });
+
+  if (typeof XLSX === 'undefined') {
+    showToast('טוען... נסה שוב'); return;
+  }
+
+  // ---- Sheet 1: פירוט ----
+  var sheet1 = [['תאריך','שעה','חבר','מוצר','קטגוריה','כמות','מחיר ליחידה','סה"כ']];
+  f.forEach(function(o){
+    var d = new Date(o.ts);
+    var price = getPrice(o.product);
+    sheet1.push([
+      d.toLocaleDateString('he-IL'),
+      d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
+      o.member, o.product, o.cat, o.qty, price, price * o.qty
+    ]);
+  });
+
+  // ---- Sheet 2: סיכום ----
+  var byMember = {};
+  f.forEach(function(o){
+    if (!byMember[o.member]) byMember[o.member] = {items:0, total:0};
+    byMember[o.member].items += o.qty;
+    byMember[o.member].total += getPrice(o.product) * o.qty;
+  });
+  var grandTotal = 0, grandItems = 0;
+  var memberCode = {};
+  members.forEach(function(m){ memberCode[m.name] = m.code || ''; });
+
+  var sheet2 = [['קוד תקציב','חבר','סה"כ פריטים','סה"כ לתשלום (₪)']];
+  Object.keys(byMember).sort().forEach(function(name){
+    sheet2.push([memberCode[name]||'', name, byMember[name].items, byMember[name].total]);
+    grandTotal += byMember[name].total;
+    grandItems += byMember[name].items;
+  });
+  sheet2.push([]);
+  sheet2.push(['', 'סה"כ כללי', grandItems, grandTotal]);
+
+  // Build workbook
+  var wb = XLSX.utils.book_new();
+  var ws1 = XLSX.utils.aoa_to_sheet(sheet1);
+  var ws2 = XLSX.utils.aoa_to_sheet(sheet2);
+  XLSX.utils.book_append_sheet(wb, ws1, 'פירוט');
+  XLSX.utils.book_append_sheet(wb, ws2, 'סיכום');
+  XLSX.writeFile(wb, 'פאב-' + val + '.xlsx');
+}
+
+// ---- ADMIN ----
+function renderAdmin() {
+  var btn=document.getElementById('food-toggle-btn');
+  btn.textContent=adminFoodOn?'פעיל':'כבוי'; btn.classList.toggle('on',adminFoodOn);
+  renderMenuList();
+  renderEditToday();
+  // set default date range to current month
+  var now = new Date();
+  var y = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0');
+  var firstDay = y+'-'+mo+'-01';
+  var lastDay = y+'-'+mo+'-'+String(new Date(y,now.getMonth()+1,0).getDate()).padStart(2,'0');
+  if (!document.getElementById('report-from').value) document.getElementById('report-from').value = firstDay;
+  if (!document.getElementById('report-to').value) document.getElementById('report-to').value = lastDay;
+  // populate member selector — only members with email + all consumers option
+  var sel = document.getElementById('report-member');
+  var prev = sel.value;
+  sel.innerHTML = '<option value="">— בחר חבר —</option>';
+  sel.innerHTML += '<option value="__all__">📋 כל הצרכנים → pubhukuk@gmail.com</option>';
+  members.forEach(function(m) {
+    if (m.email) {
+      var opt = document.createElement('option');
+      opt.value = m.name;
+      opt.textContent = m.name + ' (' + m.email + ')';
+      sel.appendChild(opt);
+    }
+  });
+  if (prev) sel.value = prev;
+  onReportMemberChange();
+  var el=document.getElementById('members-list');
+  if (!members.length){ el.innerHTML='<div class="empty">אין חברים</div>'; return; }
+  el.innerHTML=members.map(function(m,i){
+    var ph=m.phone?'<span style="color:var(--text3);font-size:12px;margin-right:8px;">'+m.phone+'</span>':'';
+    var em=m.email?'<span style="color:var(--text3);font-size:11px;margin-right:6px;">'+m.email+'</span>':'';
+    return '<div class="item-row">' +
+      '<span style="flex:1;">'+m.name+ph+em+'</span>' +
+      '<button onclick="openEditMember('+i+')" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer;font-family:var(--font-body);margin-left:6px;">✏️</button>' +
+      '<button class="del-btn" onclick="deleteMember('+i+')">×</button>' +
+    '</div>';
+  }).join('');
+}
+function addMemberManual() {
+  var v=document.getElementById('new-member-input').value.trim();
+  if (!v||getMemberNames().indexOf(v)!==-1) return;
+  members.push({name:v,phone:''}); saveMembers();
+  document.getElementById('new-member-input').value='';
+  renderAdmin(); showToast('חבר נוסף: '+v);
+}
+function deleteMember(i){ members.splice(i,1); saveMembers(); renderAdmin(); }
+
+// ---- EDIT MEMBER ----
+var editMemberIndex = -1;
+function openEditMember(i) {
+  editMemberIndex = i;
+  var m = members[i];
+  var nameParts = (m.name||'').split(' ');
+  document.getElementById('em-first').value = nameParts[0] || '';
+  document.getElementById('em-last').value = nameParts.slice(1).join(' ') || '';
+  document.getElementById('em-phone').value = m.phone || '';
+  document.getElementById('em-email').value = m.email || '';
+  document.getElementById('em-err').style.display = 'none';
+  document.getElementById('editmember-overlay').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('em-first').focus(); }, 80);
+}
+function closeEditMember() {
+  document.getElementById('editmember-overlay').style.display = 'none';
+  editMemberIndex = -1;
+}
+function confirmEditMember() {
+  var first = document.getElementById('em-first').value.trim();
+  var last = document.getElementById('em-last').value.trim();
+  var phone = document.getElementById('em-phone').value.trim();
+  var email = document.getElementById('em-email').value.trim();
+  if (!first || !last) { document.getElementById('em-err').style.display='block'; return; }
+  var full = first + ' ' + last;
+  members[editMemberIndex] = {name: full, phone: phone, email: email};
+  saveMembers();
+  closeEditMember();
+  renderAdmin();
+  showToast('פרטים עודכנו ✓');
+}
+function changePin() {
+  var v = document.getElementById('new-pin-input').value.trim();
+  if (v.length !== 4 || isNaN(v)) { showToast('קוד חייב להיות 4 ספרות'); return; }
+  PIN = v; savePin();
+  document.getElementById('new-pin-input').value = '';
+  showToast('קוד עודכן ✓');
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ---- INIT ----
+renderDate();
+renderBeerGrid();
+renderDrinksGrid();
+renderFoodGrid();
+updateConfirm();
+showTab('registro');
+loadFromCloud();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
