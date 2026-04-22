@@ -1064,7 +1064,10 @@ function exportCSV() {
   var ws2 = XLSX.utils.aoa_to_sheet(sheet2);
   XLSX.utils.book_append_sheet(wb, ws1, 'פירוט');
   XLSX.utils.book_append_sheet(wb, ws2, 'סיכום');
-  XLSX.writeFile(wb, 'פאב-' + val + '.xlsx');
+  var from = document.getElementById('date-from').value || '';
+  var to = document.getElementById('date-to').value || '';
+  var fname = 'פאב-' + from + '_' + to + '.xlsx';
+  XLSX.writeFile(wb, fname);
 }
 
 // ---- ADMIN ----
