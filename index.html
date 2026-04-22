@@ -140,6 +140,9 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.date-range-row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.date-range-row input[type=date] { padding:6px 10px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r); color:var(--text); font-size:13px; font-family:var(--font-body); }
+.date-range-row input[type=date]:focus { outline:none; border-color:var(--amber); }
 </style>
 </head>
 <body>
@@ -217,8 +220,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <div class="tab-scroll">
       <div class="card">
         <div class="month-row">
-          <select id="month-select" onchange="renderSummary()"></select>
+          <select id="month-select" onchange="onMonthChange()"></select>
           <button class="export-btn" onclick="exportCSV()">ייצוא Excel</button>
+        </div>
+        <div class="date-range-row" id="date-range-row">
+          <span style="font-size:13px;color:var(--text3)">מ:</span>
+          <input type="date" id="date-from" onchange="renderSummary()">
+          <span style="font-size:13px;color:var(--text3)">עד:</span>
+          <input type="date" id="date-to" onchange="renderSummary()">
+          <button class="export-btn" onclick="resetDateRange()" style="font-size:12px;padding:6px 10px;">✕ נקה</button>
         </div>
         <div id="summary-list"><div class="empty">אין רישומים</div></div>
       </div>
@@ -935,12 +945,51 @@ function populateMonths() {
   sel.innerHTML = Object.keys(seen).sort().reverse().map(function(k){
     var p=k.split('-'); return '<option value="'+k+'">'+MONTHS[parseInt(p[1])-1]+' '+p[0]+'</option>';
   }).join('');
+  // Init date range to current month
+  if (sel.value) {
+    var p=sel.value.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
+    var firstDay = new Date(y, mo-1, 1);
+    var lastDay = new Date(y, mo, 0);
+    document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
+    document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+  }
 }
-function renderSummary() {
+function onMonthChange() {
+  // Reset date range when month changes
   var val = document.getElementById('month-select').value;
   if (!val) return;
   var p=val.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
-  var filtered = orders.filter(function(o){ var d=new Date(o.ts); return d.getFullYear()===y&&d.getMonth()+1===mo; });
+  var firstDay = new Date(y, mo-1, 1);
+  var lastDay = new Date(y, mo, 0);
+  document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
+  document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+  renderSummary();
+}
+function resetDateRange() {
+  var val = document.getElementById('month-select').value;
+  if (!val) return;
+  var p=val.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
+  var firstDay = new Date(y, mo-1, 1);
+  var lastDay = new Date(y, mo, 0);
+  document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
+  document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+  renderSummary();
+}
+function getDateFilter() {
+  var from = document.getElementById('date-from').value;
+  var to = document.getElementById('date-to').value;
+  var fromDate = from ? new Date(from + 'T00:00:00') : null;
+  var toDate = to ? new Date(to + 'T23:59:59') : null;
+  return { fromDate: fromDate, toDate: toDate };
+}
+function renderSummary() {
+  var f = getDateFilter();
+  var filtered = orders.filter(function(o){
+    var d=new Date(o.ts);
+    if (f.fromDate && d < f.fromDate) return false;
+    if (f.toDate && d > f.toDate) return false;
+    return true;
+  });
   var el = document.getElementById('summary-list');
   if (!filtered.length){ el.innerHTML='<div class="empty">אין רישומים בחודש זה</div>'; return; }
   var byDate={};
@@ -964,9 +1013,14 @@ function renderSummary() {
   el.innerHTML=html;
 }
 function exportCSV() {
-  var val = document.getElementById('month-select').value; if (!val) return;
-  var p = val.split('-'), y = parseInt(p[0]), mo = parseInt(p[1]);
-  var f = orders.filter(function(o){ var d=new Date(o.ts); return d.getFullYear()===y&&d.getMonth()+1===mo; });
+  var filter = getDateFilter();
+  var f = orders.filter(function(o){
+    var d=new Date(o.ts);
+    if (filter.fromDate && d < filter.fromDate) return false;
+    if (filter.toDate && d > filter.toDate) return false;
+    return true;
+  });
+  if (!f.length) { showToast('אין נתונים לטווח זה'); return; }
 
   if (typeof XLSX === 'undefined') {
     showToast('טוען... נסה שוב'); return;
