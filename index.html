@@ -681,7 +681,7 @@ function confirmNewMember() {
   var email = document.getElementById('nm-email').value.trim();
   if (!first || !last) { document.getElementById('nm-err').style.display='block'; return; }
   var full = first + ' ' + last;
-  members.push({name:full, phone:phone, email:email}); saveMembers();
+  members.push({name:full, phone:phone, email:email, code:''}); saveMembers();
   document.getElementById('newmember-overlay').style.display = 'none';
   selectMember(full);
   showToast('חבר חדש: ' + full);
@@ -1113,7 +1113,7 @@ function renderAdmin() {
 function addMemberManual() {
   var v=document.getElementById('new-member-input').value.trim();
   if (!v||getMemberNames().indexOf(v)!==-1) return;
-  members.push({name:v,phone:''}); saveMembers();
+  members.push({name:v, phone:'', email:'', code:''}); saveMembers();
   document.getElementById('new-member-input').value='';
   renderAdmin(); showToast('חבר נוסף: '+v);
 }
@@ -1144,7 +1144,8 @@ function confirmEditMember() {
   var email = document.getElementById('em-email').value.trim();
   if (!first || !last) { document.getElementById('em-err').style.display='block'; return; }
   var full = first + ' ' + last;
-  members[editMemberIndex] = {name: full, phone: phone, email: email};
+  var existingCode = members[editMemberIndex].code || '';
+  members[editMemberIndex] = {name: full, phone: phone, email: email, code: existingCode};
   saveMembers();
   closeEditMember();
   renderAdmin();
