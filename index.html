@@ -681,7 +681,7 @@ function confirmNewMember() {
   var email = document.getElementById('nm-email').value.trim();
   if (!first || !last) { document.getElementById('nm-err').style.display='block'; return; }
   var full = first + ' ' + last;
-  members.push({name:full, phone:phone, email:email, code:''}); saveMembers();
+  members.push({name:full, phone:phone, email:email}); saveMembers();
   document.getElementById('newmember-overlay').style.display = 'none';
   selectMember(full);
   showToast('חבר חדש: ' + full);
@@ -936,6 +936,12 @@ function checkPin() {
 }
 
 // ---- SUMMARY ----
+function toLocalDateStr(date) {
+  var y = date.getFullYear();
+  var m = String(date.getMonth()+1).padStart(2,'0');
+  var d = String(date.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+d;
+}
 function populateMonths() {
   var seen = {};
   orders.forEach(function(o){ var d=new Date(o.ts); seen[d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')]=1; });
@@ -950,8 +956,8 @@ function populateMonths() {
     var p=sel.value.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
     var firstDay = new Date(y, mo-1, 1);
     var lastDay = new Date(y, mo, 0);
-    document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
-    document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+    document.getElementById('date-from').value = toLocalDateStr(firstDay);
+    document.getElementById('date-to').value = toLocalDateStr(lastDay);
   }
 }
 function onMonthChange() {
@@ -961,8 +967,8 @@ function onMonthChange() {
   var p=val.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
   var firstDay = new Date(y, mo-1, 1);
   var lastDay = new Date(y, mo, 0);
-  document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
-  document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+  document.getElementById('date-from').value = toLocalDateStr(firstDay);
+  document.getElementById('date-to').value = toLocalDateStr(lastDay);
   renderSummary();
 }
 function resetDateRange() {
@@ -971,8 +977,8 @@ function resetDateRange() {
   var p=val.split('-'), y=parseInt(p[0]), mo=parseInt(p[1]);
   var firstDay = new Date(y, mo-1, 1);
   var lastDay = new Date(y, mo, 0);
-  document.getElementById('date-from').value = firstDay.toISOString().slice(0,10);
-  document.getElementById('date-to').value = lastDay.toISOString().slice(0,10);
+  document.getElementById('date-from').value = toLocalDateStr(firstDay);
+  document.getElementById('date-to').value = toLocalDateStr(lastDay);
   renderSummary();
 }
 function getDateFilter() {
@@ -1113,7 +1119,7 @@ function renderAdmin() {
 function addMemberManual() {
   var v=document.getElementById('new-member-input').value.trim();
   if (!v||getMemberNames().indexOf(v)!==-1) return;
-  members.push({name:v, phone:'', email:'', code:''}); saveMembers();
+  members.push({name:v,phone:''}); saveMembers();
   document.getElementById('new-member-input').value='';
   renderAdmin(); showToast('חבר נוסף: '+v);
 }
@@ -1144,8 +1150,7 @@ function confirmEditMember() {
   var email = document.getElementById('em-email').value.trim();
   if (!first || !last) { document.getElementById('em-err').style.display='block'; return; }
   var full = first + ' ' + last;
-  var existingCode = members[editMemberIndex].code || '';
-  members[editMemberIndex] = {name: full, phone: phone, email: email, code: existingCode};
+  members[editMemberIndex] = {name: full, phone: phone, email: email};
   saveMembers();
   closeEditMember();
   renderAdmin();
