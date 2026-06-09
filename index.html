@@ -389,7 +389,40 @@ var DEFAULT_MENU = [
   {name:'אמפנדס', cat:'אוכל', price:10}
 ];
 var menu = DEFAULT_MENU.slice(); // always load fresh from cloud, localStorage is just a cache
-var ICON_MAP = {"ערק": "arak.png", "בלו מון": "bluemoon.png", "בריזר": "breezer.png", "באדוויזר": "bud.png", "קוקטייל": "coctail.png", "קולה": "cola.png", "קולה/מיץ": "cola.png", "קורונה": "corona.png", "גולדסטאר ⅓": "goldstarunfil.png", "גולדסטאר ½": "goldstarunfil.png", "מיץ ענבים": "grape.png", "חבית ½": "half.png", "הינקן": "Heineken.png", "לף בראון": "leffe.png", "חבית ⅓": "shlish.png", "בירה ⅓": "shlish.png", "ספרייט": "sptrite.png", "סיידר": "strong.png", "ויסקי": "whisky.png", "יין": "wine.png", "סודה": "soda.png", "XL": "xl.png", "סטלה": "stela.png", "מכבי ½": "starop.png", "מכבי\\גולדסטאר ½": "goldstarunfil.png"};
+var ICON_MAP = {
+  'ערק': 'arak.png',
+  'בלו מון': 'bluemoon.png',
+  'בריזר': 'breezer.png',
+  'באדוויזר': 'bud.png',
+  'קוקטייל': 'coctail.png',
+  'קולה': 'cola.png',
+  'קולה/מיץ': 'cola.png',
+  'קורונה': 'corona.png',
+  'גולדסטר 1/3': 'goldstarunfil.png',
+  'גולדסטאר ⅓': 'goldstarunfil.png',
+  'גולדסטר 2/1': 'goldstarunfil.png',
+  'גולדסטאר ½': 'goldstarunfil.png',
+  'מיץ ענבים': 'grape.png',
+  'חבית ½': 'half.png',
+  'הינקן': 'Heineken.png',
+  'לף בראון': 'leffe.png',
+  'חבית ⅓': 'shlish.png',
+  'בירה ⅓': 'shlish.png',
+  'ספרייט': 'sptrite.png',
+  'סיידר': 'strong.png',
+  'וויסקי': 'whisky.png',
+  'ויסקי': 'whisky.png',
+  'יין': 'wine.png',
+  'סודה': 'soda.png',
+  'XL': 'xl.png',
+  'סטלה': 'stela.png',
+  'סטארופראמן': 'starop.png',
+  'מכבי 1/2': 'starop.png',
+  'מכבי ½': 'starop.png',
+  'מכבי\\גולדסטאר ½': 'goldstarunfil.png',
+  'צ\'ייסר': 'cheiser.png',
+  'בירה מבצע': 'offer.png',
+};
 var ICON_BASE = "https://raw.githubusercontent.com/gustavolitvinoff/pub-hukuk/main/icons/";
 function getProductIcon(name) {
   if (ICON_MAP[name]) return ICON_BASE + ICON_MAP[name];
