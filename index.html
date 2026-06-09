@@ -91,7 +91,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .prod-section-title { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 .prod-section-title::before { content: ''; flex: 1; height: 1px; background: var(--border); }
 .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
-.prod-btn { padding: 16px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; text-align: center; font-family: var(--font-body); position: relative; }
+.prod-btn { padding: 10px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; text-align: center; font-family: var(--font-body); position: relative; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .prod-btn:active { border-color: var(--amber); background: var(--bg4); }
 .prod-btn .pname { font-size: 18px; color: var(--text); font-weight: 500; }
 .prod-btn .badge { position: absolute; top: -7px; left: -7px; background: var(--amber); color: #fff; font-size: 13px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -389,12 +389,18 @@ var DEFAULT_MENU = [
   {name:'אמפנדס', cat:'אוכל', price:10}
 ];
 var menu = DEFAULT_MENU.slice(); // always load fresh from cloud, localStorage is just a cache
+var ICON_MAP = {"ערק": "arak.png", "בלו מון": "bluemoon.png", "בריזר": "breezer.png", "באדוויזר": "bud.png", "קוקטייל": "coctail.png", "קולה": "cola.png", "קולה/מיץ": "cola.png", "קורונה": "corona.png", "גולדסטאר ⅓": "goldstarunfil.png", "גולדסטאר ½": "goldstarunfil.png", "מיץ ענבים": "grape.png", "חבית ½": "half.png", "הינקן": "Heineken.png", "לף בראון": "leffe.png", "חבית ⅓": "shlish.png", "בירה ⅓": "shlish.png", "ספרייט": "sptrite.png", "סיידר": "strong.png", "ויסקי": "whisky.png", "יין": "wine.png", "סודה": "soda.png", "XL": "xl.png", "סטלה": "stela.png", "מכבי ½": "starop.png", "מכבי\\גולדסטאר ½": "goldstarunfil.png"};
+var ICON_BASE = "https://raw.githubusercontent.com/gustavolitvinoff/pub-hukuk/main/icons/";
+function getProductIcon(name) {
+  if (ICON_MAP[name]) return ICON_BASE + ICON_MAP[name];
+  return '';
+}
 var BEERS = [], DRINKS = [], FOODS = [], ALL_PRODUCTS = [];
 
 function refreshMenuArrays() {
-  BEERS  = menu.filter(function(p){ return p.cat==='בירה'; });
-  DRINKS = menu.filter(function(p){ return p.cat==='משקה'; });
-  FOODS  = menu.filter(function(p){ return p.cat==='אוכל'; });
+  BEERS  = menu.filter(function(p){ return p.cat==='בירה' && !p.hidden; });
+  DRINKS = menu.filter(function(p){ return p.cat==='משקה' && !p.hidden; });
+  FOODS  = menu.filter(function(p){ return p.cat==='אוכל' && !p.hidden; });
   ALL_PRODUCTS = menu.slice();
 }
 refreshMenuArrays();
@@ -407,7 +413,7 @@ function getPrice(productName) {
 }
 function saveMenu() {
   localStorage.setItem('pub_menu', JSON.stringify(menu));
-  var rows = menu.map(function(p){ return [p.name, p.cat, p.price]; });
+  var rows = menu.map(function(p){ return [p.name, p.cat, p.price, p.img||'', p.hidden?'1':'']; });
   fetch(SHEETS_URL + '?action=savemenu&data=' + encodeURIComponent(JSON.stringify(rows))).catch(function(){});
 }
 function addProduct() {
@@ -435,10 +441,14 @@ function renderMenuList() {
   if (!el) return;
   var catOrder = {'בירה':0,'משקה':1,'אוכל':2};
   el.innerHTML = menu.map(function(p, i) {
-    return '<div class="item-row">' +
+    var hiddenStyle = p.hidden ? 'opacity:0.45;' : '';
+    var hideLabel = p.hidden ? '👁' : '🙈';
+    var hideTitle = p.hidden ? 'הצג בתפריט' : 'הסתר מהתפריט';
+    return '<div class="item-row" style="' + hiddenStyle + '">' +
       '<span style="flex:1;font-size:14px;">' + p.name + ' <span style="color:var(--text3);font-size:11px;">(' + p.cat + ')</span></span>' +
       '<input type="number" value="' + (p.price||0) + '" style="width:60px;padding:4px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;text-align:center;" onchange="updateProductPrice(' + i + ',this.value)" />' +
       '<span style="font-size:12px;color:var(--text3);margin:0 4px;">₪</span>' +
+      '<button title="' + hideTitle + '" onclick="toggleMenuHidden(' + i + ')" style="background:none;border:none;font-size:18px;cursor:pointer;padding:0 4px;">' + hideLabel + '</button>' +
       '<button class="del-btn" onclick="deleteProduct(' + i + ')">×</button>' +
     '</div>';
   }).join('') || '<div class="empty">אין מוצרים</div>';
@@ -542,7 +552,7 @@ function loadFromCloud() {
       }
       if (data.menu && data.menu.length > 0) {
         menu = data.menu.map(function(row){
-          return {name:row[0]||'', cat:row[1]||'משקה', price:parseInt(row[2])||0};
+          return {name:row[0]||'', cat:row[1]||'משקה', price:parseInt(row[2])||0, img:row[3]||'', hidden:row[4]=='1'||row[4]===1||row[4]===true};
         }).filter(function(p){ return p.name; });
         localStorage.setItem('pub_menu', JSON.stringify(menu));
         refreshMenuArrays(); renderAllGrids(); renderMenuList();
@@ -839,7 +849,9 @@ function makeGrid(items) {
   return items.map(function(p) {
     var idx = cartGet(p.name);
     var badge = idx !== -1 ? '<span class="badge">'+cart[idx].qty+'</span>' : '';
-    return '<button class="prod-btn" onclick=\'cartAdd('+JSON.stringify(p)+')\'>' + badge + '<div class="pname">'+p.name+'</div></button>';
+    var iconUrl = p.img || getProductIcon(p.name);
+    var imgHtml = iconUrl ? '<img src="'+iconUrl+'" onerror="this.style.display=\'none\';" style="width:60px;height:60px;object-fit:contain;display:block;margin:0 auto 6px;">' : '';
+    return '<button class="prod-btn" onclick=\'cartAdd('+JSON.stringify(p)+')\'>'+badge+imgHtml+'<div class="pname">'+p.name+'</div></button>';
   }).join('');
 }
 function renderBeerGrid() { document.getElementById('beer-grid').innerHTML = makeGrid(BEERS); }
