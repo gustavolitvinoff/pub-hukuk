@@ -210,6 +210,10 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             <div class="prod-grid" id="drinks-grid"></div>
           </div>
           <div class="prod-section">
+            <div class="prod-section-title">משקאות קלים</div>
+            <div class="prod-grid" id="soft-grid"></div>
+          </div>
+          <div class="prod-section">
             <div class="prod-section-title">אוכל</div>
             <div class="food-lock" id="food-lock">
               <button class="unlock-btn" onclick="requestFoodUnlock()">🔒 פתח עם קוד</button>
@@ -265,6 +269,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
             <select id="new-prod-cat" style="padding:10px 8px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r); color:var(--text); font-family:var(--font-body); font-size:14px; outline:none;">
               <option value="בירה">בירה</option>
               <option value="משקה">משקה</option>
+              <option value="משקה קל">משקה קל</option>
               <option value="אוכל">אוכל</option>
             </select>
             <button class="add-btn" onclick="addProduct()">הוסף</button>
@@ -433,11 +438,12 @@ function getProductIcon(name) {
   if (ICON_MAP[name]) return ICON_BASE + ICON_MAP[name];
   return '';
 }
-var BEERS = [], DRINKS = [], FOODS = [], ALL_PRODUCTS = [];
+var BEERS = [], DRINKS = [], SOFT = [], FOODS = [], ALL_PRODUCTS = [];
 
 function refreshMenuArrays() {
   BEERS  = menu.filter(function(p){ return p.cat==='בירה' && !p.hidden; });
   DRINKS = menu.filter(function(p){ return p.cat==='משקה' && !p.hidden; });
+  SOFT   = menu.filter(function(p){ return p.cat==='משקה קל' && !p.hidden; });
   FOODS  = menu.filter(function(p){ return p.cat==='אוכל' && !p.hidden; });
   ALL_PRODUCTS = menu.slice();
 }
@@ -481,7 +487,7 @@ function updateProductPrice(i, val) {
 function renderMenuList() {
   var el = document.getElementById('menu-list');
   if (!el) return;
-  var catOrder = {'בירה':0,'משקה':1,'אוכל':2};
+  var catOrder = {'בירה':0,'משקה':1,'משקה קל':2,'אוכל':3};
   el.innerHTML = menu.map(function(p, i) {
     var hiddenStyle = p.hidden ? 'opacity:0.45;' : '';
     var hideLabel = p.hidden ? '👁' : '🙈';
@@ -898,6 +904,7 @@ function makeGrid(items) {
 }
 function renderBeerGrid() { document.getElementById('beer-grid').innerHTML = makeGrid(BEERS); }
 function renderDrinksGrid() { document.getElementById('drinks-grid').innerHTML = makeGrid(DRINKS); }
+function renderSoftGrid() { document.getElementById('soft-grid').innerHTML = makeGrid(SOFT); }
 function renderFoodGrid() {
   var show = foodUnlocked || adminFoodOn;
   document.getElementById('food-lock').style.display = show ? 'none' : 'flex';
@@ -905,7 +912,7 @@ function renderFoodGrid() {
   document.getElementById('food-close-btn').style.display = show ? 'block' : 'none';
   if (show) { document.getElementById('food-grid').innerHTML = makeGrid(FOODS); }
 }
-function renderAllGrids() { renderBeerGrid(); renderDrinksGrid(); renderFoodGrid(); }
+function renderAllGrids() { renderBeerGrid(); renderDrinksGrid(); renderSoftGrid(); renderFoodGrid(); }
 
 // ---- CONFIRM ----
 function updateConfirm() {
