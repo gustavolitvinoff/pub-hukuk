@@ -430,6 +430,8 @@ var ICON_MAP = {
   'סטלה': 'stela.png',
   'ברד': 'barad.png',
   'ברד ילדים': 'barad.png',
+  'מיץ תפוזים': 'orange.png',
+  'מורפיס': 'murphys.png',
   'אמפנדס': 'empanadas.png',
   'נקניקיה ולחמניה': 'pancho.png',
   'המבורגר': 'hamburguesa.png',
@@ -445,10 +447,19 @@ function normalizeKey(s) {
 var ICON_MAP_NORM = {};
 Object.keys(ICON_MAP).forEach(function(k){ ICON_MAP_NORM[normalizeKey(k)] = ICON_MAP[k]; });
 function getProductIcon(name) {
-  if (ICON_MAP[name]) return ICON_BASE + ICON_MAP[name];
-  var norm = normalizeKey(name);
-  if (ICON_MAP_NORM[norm]) return ICON_BASE + ICON_MAP_NORM[norm];
-  return '';
+  var file = ICON_MAP[name];
+  if (!file) {
+    var norm = normalizeKey(name);
+    file = ICON_MAP_NORM[norm];
+  }
+  if (!file) return '';
+  // In light mode, use the -c (white background) version
+  var isLight = document.documentElement.classList.contains('light');
+  if (isLight) {
+    var dotIdx = file.lastIndexOf('.');
+    file = file.slice(0, dotIdx) + '-c' + file.slice(dotIdx);
+  }
+  return ICON_BASE + file;
 }
 var BEERS = [], DRINKS = [], SOFT = [], FOODS = [], ALL_PRODUCTS = [];
 
@@ -909,7 +920,7 @@ function makeGrid(items) {
   return items.map(function(p) {
     var idx = cartGet(p.name);
     var badge = idx !== -1 ? '<span class="badge">'+cart[idx].qty+'</span>' : '';
-    var iconUrl = p.img || getProductIcon(p.name);
+    var iconUrl = getProductIcon(p.name) || p.img;
     var imgHtml = iconUrl ? '<img src="'+iconUrl+'" onerror="this.style.display=\'none\';" style="width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 6px;">' : '';
     return '<button class="prod-btn" onclick=\'cartAdd('+JSON.stringify(p)+')\'>'+badge+imgHtml+'<div class="pname" style="font-size:13px;line-height:1.2;">'+p.name+'</div></button>';
   }).join('');
@@ -1256,9 +1267,10 @@ function toggleTheme() {
   var isLight = document.documentElement.classList.toggle('light');
   document.getElementById('theme-btn').textContent = isLight ? '☀️' : '🌙';
   localStorage.setItem('pub_theme', isLight ? 'light' : 'dark');
-  // Update meta theme-color
   var meta = document.querySelector('meta[name=theme-color]');
   if (meta) meta.content = isLight ? '#F4EDE0' : '#1a1410';
+  // Re-render grids so product images swap to the right version
+  if (typeof renderAllGrids === 'function') renderAllGrids();
 }
 // Init theme
 (function() {
