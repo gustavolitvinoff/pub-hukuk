@@ -847,7 +847,7 @@ function sendEmailReport() {
       return [name, d.total, d.paid, Object.keys(d.items).map(function(p){ return p+': '+d.items[p]; }).join(', ')];
     });
   } else {
-    // Send individual report
+    // Send individual report with Excel attachment
     var member = members.find(function(x){ return x.name===memberName; });
     if (!member || !member.email) { showToast('לחבר זה אין אימייל'); return; }
     emailTo = member.email;
@@ -855,13 +855,30 @@ function sendEmailReport() {
       return o.member === memberName && new Date(o.ts) >= fromDate && new Date(o.ts) <= toDate;
     });
     if (!filtered.length) { showToast('אין רישומים בתאריכים אלה'); return; }
-    var agg = {}, totalItems = 0, totalPaid = 0;
+    filtered.sort(function(a,b){ return new Date(a.ts) - new Date(b.ts); });
+    var totalItems = 0, totalPaid = 0;
+    // Build sheet rows: header + detail
+    var xlRows = [['תאריך','שעה','מוצר','כמות','מחיר (₪)']];
     filtered.forEach(function(o){
-      agg[o.product] = (agg[o.product]||0) + o.qty;
+      var d = new Date(o.ts);
+      var dateStr = ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();
+      var timeStr = ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      var price = getPrice(o.product) * o.qty;
       totalItems += o.qty;
-      totalPaid += getPrice(o.product) * o.qty;
+      totalPaid += price;
+      xlRows.push([dateStr, timeStr, o.product, o.qty, price]);
     });
-    data = [[memberName, totalItems, totalPaid, Object.keys(agg).map(function(p){ return p+': '+agg[p]; }).join(', ')]];
+    xlRows.push(['','','סה"כ', totalItems, totalPaid]);
+
+    showToast('שולח...');
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      body: JSON.stringify({action:'sendexcel', email:emailTo, member:memberName, from:from, to:to, rows:xlRows})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ showToast(res.ok ? 'מייל נשלח ✓' : 'שגיאה: ' + (res.error||'')); })
+    .catch(function(){ showToast('שגיאה בשליחה'); });
+    return;
   }
 
   showToast('שולח...');
