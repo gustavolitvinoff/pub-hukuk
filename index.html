@@ -167,6 +167,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .rank-expand-btn { width:100%; margin-top:8px; padding:7px; background:var(--bg4); border:1px solid var(--border); border-radius:var(--r); color:var(--amber-mid); font-size:13px; cursor:pointer; font-family:var(--font-body); }
 .rank-expand-btn:active { opacity:0.7; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -250,6 +252,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
         <div class="month-row">
           <select id="month-select" onchange="onMonthChange()"></select>
           <button class="export-btn" onclick="exportCSV()">ייצוא Excel</button>
+          <button class="export-btn" onclick="exportStatsPDF()" style="border-color:var(--amber);color:var(--amber-mid);">📊 דוח סטטיסטי</button>
         </div>
         <div class="date-range-row" id="date-range-row">
           <span style="font-size:13px;color:var(--text3)">מ:</span>
@@ -1254,6 +1257,149 @@ function toggleProductRank() {
     var total = document.querySelectorAll('.rank-card:nth-child(2) .rank-row').length;
     btn.innerHTML = '▼ הצג הכל ('+total+')';
   }
+}
+async function exportStatsPDF() {
+  var filter = getDateFilter();
+  var f = orders.filter(function(o){
+    var d=new Date(o.ts);
+    if (filter.fromDate && d < filter.fromDate) return false;
+    if (filter.toDate && d > filter.toDate) return false;
+    return true;
+  });
+  if (!f.length) { showToast('אין נתונים לטווח זה'); return; }
+  if (typeof window.jspdf === 'undefined' || typeof Chart === 'undefined') { showToast('טוען ספריות... נסה שוב'); return; }
+
+  showToast('מכין דוח...');
+
+  // ---- Aggregate data ----
+  var byProduct = {}, byMember = {}, byDay = {}, byCat = {};
+  var uniqueDays = {}, uniquePeople = {};
+  f.forEach(function(o){
+    byProduct[o.product] = (byProduct[o.product]||0) + o.qty;
+    byMember[o.member] = (byMember[o.member]||0) + o.qty;
+    byCat[o.cat] = (byCat[o.cat]||0) + o.qty;
+    var d = new Date(o.ts);
+    var dayKey = d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'});
+    byDay[dayKey] = (byDay[dayKey]||0) + o.qty;
+    var fullDay = toLocalDateStr(d);
+    uniqueDays[fullDay] = true;
+    uniquePeople[o.member] = true;
+  });
+
+  var totalItems = f.reduce(function(s,o){return s+o.qty;},0);
+  var openDays = Object.keys(uniqueDays).length;
+  var numPeople = Object.keys(uniquePeople).length;
+
+  var from = document.getElementById('date-from').value || '';
+  var to = document.getElementById('date-to').value || '';
+
+  // ---- Helper to make a chart and return image ----
+  function makeChart(type, labels, data, label, colors) {
+    return new Promise(function(resolve){
+      var canvas = document.createElement('canvas');
+      canvas.width = 700; canvas.height = 380;
+      document.body.appendChild(canvas);
+      var chart = new Chart(canvas, {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{ label: label, data: data, backgroundColor: colors || '#BA7517', borderColor:'#8B5010', borderWidth:1 }]
+        },
+        options: {
+          responsive:false, animation:false,
+          plugins:{ legend:{ display: type==='pie' || type==='doughnut' } },
+          scales: type==='pie'||type==='doughnut' ? {} : { y:{ beginAtZero:true } }
+        }
+      });
+      setTimeout(function(){
+        var img = canvas.toDataURL('image/png');
+        chart.destroy();
+        document.body.removeChild(canvas);
+        resolve(img);
+      }, 300);
+    });
+  }
+
+  // Sort helper
+  function sortObj(obj){ return Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}); }
+
+  // Prepare product chart (top 12)
+  var prodKeys = sortObj(byProduct).slice(0,12);
+  var prodImg = await makeChart('bar', prodKeys, prodKeys.map(function(k){return byProduct[k];}), 'כמות', '#BA7517');
+
+  // Members chart (top 12)
+  var memKeys = sortObj(byMember).slice(0,12);
+  var memImg = await makeChart('bar', memKeys, memKeys.map(function(k){return byMember[k];}), 'כמות', '#4caf7d');
+
+  // Days chart
+  var dayKeys = Object.keys(byDay).sort();
+  var dayImg = await makeChart('line', dayKeys, dayKeys.map(function(k){return byDay[k];}), 'צריכה יומית', '#5b8fd4');
+
+  // Category pie
+  var catKeys = Object.keys(byCat);
+  var catColors = ['#BA7517','#4caf7d','#5b8fd4','#e8a44a','#c9a84c'];
+  var catImg = await makeChart('doughnut', catKeys, catKeys.map(function(k){return byCat[k];}), 'קטגוריות', catColors);
+
+  // ---- Build PDF ----
+  var jsPDF = window.jspdf.jsPDF;
+  var pdf = new jsPDF('p','mm','a4');
+  var W = 210;
+
+  function rtlText(txt, y, size, color) {
+    pdf.setFontSize(size||12);
+    if (color) pdf.setTextColor(color[0],color[1],color[2]); else pdf.setTextColor(40,26,8);
+    pdf.text(txt, W/2, y, {align:'center'});
+  }
+
+  // Title
+  pdf.setFillColor(26,20,16); pdf.rect(0,0,W,30,'F');
+  pdf.setTextColor(250,199,117); pdf.setFontSize(20);
+  pdf.text('Pub Hukuk - Statistics', W/2, 13, {align:'center'});
+  pdf.setFontSize(11); pdf.setTextColor(200,180,140);
+  pdf.text(from + '  ->  ' + to, W/2, 22, {align:'center'});
+
+  // Key stats boxes
+  var boxY = 38;
+  var stats = [
+    ['Days Open', openDays],
+    ['Total Items', totalItems],
+    ['People', numPeople],
+    ['Products', Object.keys(byProduct).length]
+  ];
+  var bw = 44, gap = 6, startX = (W - (bw*4 + gap*3))/2;
+  stats.forEach(function(s, i){
+    var x = startX + i*(bw+gap);
+    pdf.setFillColor(237,227,208); pdf.roundedRect(x, boxY, bw, 22, 2, 2, 'F');
+    pdf.setTextColor(139,80,16); pdf.setFontSize(18);
+    pdf.text(String(s[1]), x+bw/2, boxY+11, {align:'center'});
+    pdf.setFontSize(8); pdf.setTextColor(120,80,50);
+    pdf.text(s[0], x+bw/2, boxY+18, {align:'center'});
+  });
+
+  var y = boxY + 32;
+  // Products chart
+  pdf.setTextColor(40,26,8); pdf.setFontSize(13);
+  pdf.text('Top Products', W/2, y, {align:'center'}); y+=3;
+  pdf.addImage(prodImg, 'PNG', 20, y, 170, 92); y += 98;
+
+  // Members chart
+  pdf.setFontSize(13); pdf.setTextColor(40,26,8);
+  pdf.text('Top People', W/2, y, {align:'center'}); y+=3;
+  pdf.addImage(memImg, 'PNG', 20, y, 170, 92); y += 98;
+
+  // New page
+  pdf.addPage();
+  y = 20;
+  pdf.setFontSize(13); pdf.setTextColor(40,26,8);
+  pdf.text('Daily Consumption', W/2, y, {align:'center'}); y+=3;
+  pdf.addImage(dayImg, 'PNG', 20, y, 170, 92); y += 100;
+
+  pdf.setFontSize(13); pdf.setTextColor(40,26,8);
+  pdf.text('By Category', W/2, y, {align:'center'}); y+=3;
+  pdf.addImage(catImg, 'PNG', 45, y, 120, 92);
+
+  pdf.save('pub-stats-' + from + '_' + to + '.pdf');
+  showToast('הדוח מוכן ✓');
 }
 function exportCSV() {
   var filter = getDateFilter();
