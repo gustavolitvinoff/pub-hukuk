@@ -164,6 +164,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .rank-stat-num { font-size:24px; font-weight:700; color:var(--amber-mid); }
 .rank-stat-lbl { font-size:11px; color:var(--text3); margin-top:3px; }
 @media (max-width:600px){ .ranking-grid{grid-template-columns:1fr;} .rank-stats{grid-template-columns:1fr;} }
+.rank-expand-btn { width:100%; margin-top:8px; padding:7px; background:var(--bg4); border:1px solid var(--border); border-radius:var(--r); color:var(--amber-mid); font-size:13px; cursor:pointer; font-family:var(--font-body); }
+.rank-expand-btn:active { opacity:0.7; }
 </style>
 </head>
 <body>
@@ -1206,24 +1208,29 @@ function renderRanking(filtered) {
   }
 
   var topMembers = top(byMember, 5);
-  var topProducts = top(byProduct, 5);
+  var allProducts = top(byProduct, 999);
   var topDay = top(byDay, 1)[0];
   var medals = ['🥇','🥈','🥉','4.','5.'];
 
   var html = '<div class="ranking-grid">';
 
   // Top members
-  html += '<div class="rank-card"><div class="rank-title">🏆 שתיינים מובילים</div>';
+  html += '<div class="rank-card"><div class="rank-title">🏆 אנשים מובילים</div>';
   html += topMembers.map(function(m, i){
     return '<div class="rank-row"><span class="rank-pos">'+medals[i]+'</span><span class="rank-name">'+m.name+'</span><span class="rank-val">'+m.val+'</span></div>';
   }).join('');
   html += '</div>';
 
-  // Top products
+  // Top products (with expand)
   html += '<div class="rank-card"><div class="rank-title">🍺 מוצרים מובילים</div>';
-  html += topProducts.map(function(m, i){
-    return '<div class="rank-row"><span class="rank-pos">'+medals[i]+'</span><span class="rank-name">'+m.name+'</span><span class="rank-val">'+m.val+'</span></div>';
+  html += allProducts.map(function(m, i){
+    var extraClass = i >= 5 ? ' rank-extra" style="display:none;' : '';
+    var pos = i < 5 ? medals[i] : (i+1)+'.';
+    return '<div class="rank-row'+extraClass+'"><span class="rank-pos">'+pos+'</span><span class="rank-name">'+m.name+'</span><span class="rank-val">'+m.val+'</span></div>';
   }).join('');
+  if (allProducts.length > 5) {
+    html += '<button id="prod-expand-btn" class="rank-expand-btn" onclick="toggleProductRank()">▼ הצג הכל ('+allProducts.length+')</button>';
+  }
   html += '</div>';
 
   html += '</div>';
@@ -1231,11 +1238,22 @@ function renderRanking(filtered) {
   // Stats bar
   html += '<div class="rank-stats">';
   html += '<div class="rank-stat"><div class="rank-stat-num">'+totalItems+'</div><div class="rank-stat-lbl">סה"כ פריטים</div></div>';
-  html += '<div class="rank-stat"><div class="rank-stat-num">'+Object.keys(byMember).length+'</div><div class="rank-stat-lbl">שתיינים</div></div>';
+  html += '<div class="rank-stat"><div class="rank-stat-num">'+Object.keys(byMember).length+'</div><div class="rank-stat-lbl">אנשים</div></div>';
   if (topDay) html += '<div class="rank-stat"><div class="rank-stat-num" style="font-size:15px;">'+topDay.name+'</div><div class="rank-stat-lbl">היום הכי פעיל ('+topDay.val+')</div></div>';
   html += '</div>';
 
   box.innerHTML = html;
+}
+function toggleProductRank() {
+  var btn = document.getElementById('prod-expand-btn');
+  var extras = document.querySelectorAll('.rank-extra');
+  var isHidden = extras.length && extras[0].style.display === 'none';
+  extras.forEach(function(e){ e.style.display = isHidden ? 'flex' : 'none'; });
+  if (btn) btn.innerHTML = isHidden ? '▲ הצג פחות' : btn.innerHTML.replace('▲ הצג פחות','▼ הצג הכל');
+  if (btn && !isHidden) {
+    var total = document.querySelectorAll('.rank-card:nth-child(2) .rank-row').length;
+    btn.innerHTML = '▼ הצג הכל ('+total+')';
+  }
 }
 function exportCSV() {
   var filter = getDateFilter();
