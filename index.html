@@ -967,19 +967,26 @@ function updateConfirm() {
   }
 }
 
+function localISOString() {
+  var d = new Date();
+  var off = -d.getTimezoneOffset(); // minutes ahead of UTC
+  var sign = off >= 0 ? '+' : '-';
+  var pad = function(n){ return ('0'+Math.floor(Math.abs(n))).slice(-2); };
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+    'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) +
+    '.' + ('00'+d.getMilliseconds()).slice(-3) +
+    sign + pad(off/60) + ':' + pad(off%60);
+}
 var lastOrderTs = null;
 var lastOrderMember = null;
 function confirmOrder() {
-  var ts = new Date().toISOString();
+  var ts = localISOString();
   cart.forEach(function(item) {
     orders.push({member:selMember, product:item.name, cat:item.cat, qty:item.qty, ts:ts});
   });
   saveOrders();
   var total = cart.reduce(function(s,i){ return s+i.qty; }, 0);
-  // Remember this order for undo
-  lastOrderTs = ts;
-  lastOrderMember = selMember;
-  showUndoToast(selMember + ' — ' + total + ' פריטים ✓');
+  showToast(selMember + ' — ' + total + ' פריטים ✓');
   // reset
   selMember = null; cart = [];
   document.getElementById('member-search').value = '';
