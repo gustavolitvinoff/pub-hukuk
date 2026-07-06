@@ -150,6 +150,20 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .date-range-row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
 .date-range-row input[type=date] { padding:6px 10px; background:var(--bg3); border:1px solid var(--border2); border-radius:var(--r); color:var(--text); font-size:13px; font-family:var(--font-body); }
 .date-range-row input[type=date]:focus { outline:none; border-color:var(--amber); }
+
+.ranking-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+.rank-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--rl); padding:12px 14px; }
+.rank-title { font-size:14px; font-weight:600; color:var(--amber-mid); margin-bottom:10px; }
+.rank-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); }
+.rank-row:last-child { border-bottom:none; }
+.rank-pos { font-size:15px; min-width:26px; }
+.rank-name { flex:1; font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rank-val { font-size:14px; font-weight:700; color:var(--amber-mid); }
+.rank-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.rank-stat { background:var(--bg3); border:1px solid var(--border); border-radius:var(--rl); padding:12px; text-align:center; }
+.rank-stat-num { font-size:24px; font-weight:700; color:var(--amber-mid); }
+.rank-stat-lbl { font-size:11px; color:var(--text3); margin-top:3px; }
+@media (max-width:600px){ .ranking-grid{grid-template-columns:1fr;} .rank-stats{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -242,6 +256,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
           <input type="date" id="date-to" onchange="renderSummary()">
           <button class="export-btn" onclick="resetDateRange()" style="font-size:12px;padding:6px 10px;">✕ נקה</button>
         </div>
+        <div id="ranking-box"></div>
         <div id="summary-list"><div class="empty">אין רישומים</div></div>
       </div>
     </div>
@@ -1167,6 +1182,60 @@ function renderSummary() {
     html+='<div class="date-group"><div class="date-title">'+date+'</div>'+rows+'</div>';
   });
   el.innerHTML=html;
+  renderRanking(filtered);
+}
+function renderRanking(filtered) {
+  var box = document.getElementById('ranking-box');
+  if (!box) return;
+  if (!filtered.length) { box.innerHTML = ''; return; }
+
+  // Aggregate
+  var byMember = {}, byProduct = {}, byDay = {}, totalItems = 0;
+  filtered.forEach(function(o){
+    byMember[o.member] = (byMember[o.member]||0) + o.qty;
+    byProduct[o.product] = (byProduct[o.product]||0) + o.qty;
+    var d = new Date(o.ts);
+    var dk = d.toLocaleDateString('he-IL',{weekday:'long', day:'2-digit', month:'2-digit'});
+    byDay[dk] = (byDay[dk]||0) + o.qty;
+    totalItems += o.qty;
+  });
+
+  function top(obj, n) {
+    return Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,n)
+      .map(function(k){ return {name:k, val:obj[k]}; });
+  }
+
+  var topMembers = top(byMember, 5);
+  var topProducts = top(byProduct, 5);
+  var topDay = top(byDay, 1)[0];
+  var medals = ['🥇','🥈','🥉','4.','5.'];
+
+  var html = '<div class="ranking-grid">';
+
+  // Top members
+  html += '<div class="rank-card"><div class="rank-title">🏆 שתיינים מובילים</div>';
+  html += topMembers.map(function(m, i){
+    return '<div class="rank-row"><span class="rank-pos">'+medals[i]+'</span><span class="rank-name">'+m.name+'</span><span class="rank-val">'+m.val+'</span></div>';
+  }).join('');
+  html += '</div>';
+
+  // Top products
+  html += '<div class="rank-card"><div class="rank-title">🍺 מוצרים מובילים</div>';
+  html += topProducts.map(function(m, i){
+    return '<div class="rank-row"><span class="rank-pos">'+medals[i]+'</span><span class="rank-name">'+m.name+'</span><span class="rank-val">'+m.val+'</span></div>';
+  }).join('');
+  html += '</div>';
+
+  html += '</div>';
+
+  // Stats bar
+  html += '<div class="rank-stats">';
+  html += '<div class="rank-stat"><div class="rank-stat-num">'+totalItems+'</div><div class="rank-stat-lbl">סה"כ פריטים</div></div>';
+  html += '<div class="rank-stat"><div class="rank-stat-num">'+Object.keys(byMember).length+'</div><div class="rank-stat-lbl">שתיינים</div></div>';
+  if (topDay) html += '<div class="rank-stat"><div class="rank-stat-num" style="font-size:15px;">'+topDay.name+'</div><div class="rank-stat-lbl">היום הכי פעיל ('+topDay.val+')</div></div>';
+  html += '</div>';
+
+  box.innerHTML = html;
 }
 function exportCSV() {
   var filter = getDateFilter();
