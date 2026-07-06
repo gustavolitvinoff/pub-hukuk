@@ -1327,10 +1327,6 @@ async function exportStatsPDF() {
   var prodKeys = sortObj(byProduct).slice(0,12);
   var prodImg = await makeChart('bar', prodKeys, prodKeys.map(function(k){return byProduct[k];}), 'כמות', '#BA7517');
 
-  // Members chart (top 12)
-  var memKeys = sortObj(byMember).slice(0,12);
-  var memImg = await makeChart('bar', memKeys, memKeys.map(function(k){return byMember[k];}), 'כמות', '#4caf7d');
-
   // Days chart
   var dayKeys = Object.keys(byDay).sort();
   var dayImg = await makeChart('line', dayKeys, dayKeys.map(function(k){return byDay[k];}), 'צריכה יומית', '#5b8fd4');
@@ -1380,20 +1376,16 @@ async function exportStatsPDF() {
   // Products chart
   pdf.setTextColor(40,26,8); pdf.setFontSize(13);
   pdf.text('Top Products', W/2, y, {align:'center'}); y+=3;
-  pdf.addImage(prodImg, 'PNG', 20, y, 170, 92); y += 98;
+  pdf.addImage(prodImg, 'PNG', 20, y, 170, 100); y += 108;
 
-  // Members chart
-  pdf.setFontSize(13); pdf.setTextColor(40,26,8);
-  pdf.text('Top People', W/2, y, {align:'center'}); y+=3;
-  pdf.addImage(memImg, 'PNG', 20, y, 170, 92); y += 98;
-
-  // New page
-  pdf.addPage();
-  y = 20;
+  // Daily consumption chart
   pdf.setFontSize(13); pdf.setTextColor(40,26,8);
   pdf.text('Daily Consumption', W/2, y, {align:'center'}); y+=3;
-  pdf.addImage(dayImg, 'PNG', 20, y, 170, 92); y += 100;
+  pdf.addImage(dayImg, 'PNG', 20, y, 170, 100); y += 108;
 
+  // New page for category
+  pdf.addPage();
+  y = 20;
   pdf.setFontSize(13); pdf.setTextColor(40,26,8);
   pdf.text('By Category', W/2, y, {align:'center'}); y+=3;
   pdf.addImage(catImg, 'PNG', 45, y, 120, 92);
